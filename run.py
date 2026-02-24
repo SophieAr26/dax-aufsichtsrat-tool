@@ -5,29 +5,32 @@ from datetime import date
 WDQS_URL = "https://urldefense.com/v3/__https://query.wikidata.org/sparql__;!!Nyu6ZXf5!pwFrgayqkbAGMWey_XE2Jkkv0azIsMlTcNU517EV35CbUfCO7K75iTXDsy5PeShDMgZqPwhUSDKGaZwbigRv8mBZEVhd$ "
 DAX_ITEM = "Q155718"  # DAX
 
-SPARQL = f"""
+SPARQL = """
 SELECT
+  ?company
   ?companyLabel
   ?isin
+  ?person
   ?personLabel
   ?start
-WHERE {{
-  # Unternehmen, die "part of (P361) DAX (Q155718)" sind (ohne Enddatum)
+WHERE {
+
+  # DAX-Mitglieder (ohne Enddatum)
   ?company p:P361 ?daxStmt .
-  ?daxStmt ps:P361 wd:{DAX_ITEM} .
-  FILTER NOT EXISTS {{ ?daxStmt pq:P582 ?daxEnd . }}
+  ?daxStmt ps:P361 wd:Q155718 .
+  FILTER NOT EXISTS { ?daxStmt pq:P582 ?daxEnd . }
 
-  OPTIONAL {{ ?company wdt:P946 ?isin . }}
+  OPTIONAL { ?company wdt:P946 ?isin . }
 
-  # Aufsichtsratsmitglied (P5052) ohne Enddatum = aktuell
+  # Aufsichtsratsmitglied (ohne Enddatum)
   ?company p:P5052 ?stmt .
   ?stmt ps:P5052 ?person .
-  FILTER NOT EXISTS {{ ?stmt pq:P582 ?end . }}
+  FILTER NOT EXISTS { ?stmt pq:P582 ?end . }
 
-  OPTIONAL {{ ?stmt pq:P580 ?start . }}
+  OPTIONAL { ?stmt pq:P580 ?start . }
 
-  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "de,en". }}
-}}
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "de,en". }
+}
 ORDER BY ?companyLabel ?personLabel
 """
 
@@ -46,10 +49,10 @@ def main():
     data = wdqs_query(SPARQL)
     rows = []
     for b in data["results"]["bindings"]:
-        company = b.get("companyLabel", {}).get("value", "")
-        isin = b.get("isin", {}).get("value", "")
-        person = b.get("personLabel", {}).get("value", "")
-        start = b.get("start", {}).get("value", "")
+       company = b["companyLabel"]["value"] if "companyLabel" in b else ""
+        isin = b["isin"]["value"] if "isin" in b else ""
+        person = b["personLabel"]["value"] if "personLabel" in b else ""
+         start = b.get("start", {}).get("value", "")
 
         rows.append({
             "Unternehmen": company,
