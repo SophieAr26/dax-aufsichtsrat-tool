@@ -6,8 +6,8 @@ meta:
 
 companies:
   Siemens AG:
-    url: "https://urldefense.com/v3/__https://DEIN-LINK-ZUR-AUFSICHTSRATSSEITE__;!!Nyu6ZXf5!tpukNJfTPwIwugzZETJwct-f9CJtJ23m3sNqa8ydgA9dmmYT4oyHGu6jZeuDVohksibZadpLUa4lLecLLmOedoRZeEDY$ "
-    selector: "DEIN-CSS-SELECTOR-FUER-NAMEN"
+    url: "https://www.siemens.com/de-de/company/leadership/supervisory-board/"
+    selector: "h3"
   SAP SE:
-    url: "https://urldefense.com/v3/__https://DEIN-LINK-ZUR-AUFSICHTSRATSSEITE__;!!Nyu6ZXf5!tpukNJfTPwIwugzZETJwct-f9CJtJ23m3sNqa8ydgA9dmmYT4oyHGu6jZeuDVohksibZadpLUa4lLecLLmOedoRZeEDY$ "
-    selector: "DEIN-CSS-SELECTOR-FUER-NAMEN"
+    url: "https://www.sap.com/investors/de/governance-and-sustainability/supervisory-board.html "
+    selector: "h3"
