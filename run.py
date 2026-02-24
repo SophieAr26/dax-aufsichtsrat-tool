@@ -4,7 +4,7 @@ from datetime import date
 import time
 import random
 
-WDQS_URL = "https://urldefense.com/v3/__https://query.wikidata.org/sparql__;!!Nyu6ZXf5!o6CalnBzomk5ghgzAUKByy6vZagedUy39uO3NcIOtRBRkASroJtvCPTdF_zUzsgXdWVzy5rjxQJ1zpdK0uE8UQVJtgmO$ "
+WDQS_URL = "https://urldefense.com/v3/__https://query.wikidata.org/sparql__;!!Nyu6ZXf5!vDfl7GgonwktUkISStVMasrLZqMyQ0DF8rRphAAOq7PnI0-u2sapYObD19BhmprjBWrVgLcw6zVB4mi0hGZtu5Ym65qw$ "
 
 # DAX (Wikidata Item)
 DAX_ITEM = "Q155718"
@@ -16,14 +16,21 @@ SELECT
   ?person ?personLabel
   ?start
 WHERE {{
-  # Aktuelle DAX-Mitglieder (ohne Enddatum)
-  ?company p:P361 ?daxStmt .
-  ?daxStmt ps:P361 wd:{DAX_ITEM} .
-  FILTER NOT EXISTS {{ ?daxStmt pq:P582 ?daxEnd . }}
+
+  # DAX-Mitglieder (2 Wege: direkter Claim ODER Statement ohne Enddatum)
+  {{
+    ?company wdt:P361 wd:{DAX_ITEM} .
+  }}
+  UNION
+  {{
+    ?company p:P361 ?daxStmt .
+    ?daxStmt ps:P361 wd:{DAX_ITEM} .
+    FILTER NOT EXISTS {{ ?daxStmt pq:P582 ?daxEnd . }}
+  }}
 
   OPTIONAL {{ ?company wdt:P946 ?isin . }}
 
-  # Aktuelle Aufsichtsratsmitglieder (P5052) ohne Enddatum
+  # Aufsichtsratsmitglieder (P5052) – ohne Enddatum
   ?company p:P5052 ?stmt .
   ?stmt ps:P5052 ?person .
   FILTER NOT EXISTS {{ ?stmt pq:P582 ?end . }}
@@ -36,10 +43,17 @@ ORDER BY ?companyLabel ?personLabel
 """
 
 SPARQL_DAX_ONLY = f"""
-SELECT ?company ?companyLabel WHERE {{
-  ?company p:P361 ?daxStmt .
-  ?daxStmt ps:P361 wd:{DAX_ITEM} .
-  FILTER NOT EXISTS {{ ?daxStmt pq:P582 ?daxEnd . }}
+SELECT DISTINCT ?company ?companyLabel WHERE {{
+
+  {{
+    ?company wdt:P361 wd:{DAX_ITEM} .
+  }}
+  UNION
+  {{
+    ?company p:P361 ?daxStmt .
+    ?daxStmt ps:P361 wd:{DAX_ITEM} .
+    FILTER NOT EXISTS {{ ?daxStmt pq:P582 ?daxEnd . }}
+  }}
 
   SERVICE wikibase:label {{ bd:serviceParam wikibase:language "de,en". }}
 }}
@@ -78,16 +92,14 @@ def main():
     today = date.today().isoformat()
 
     data = wdqs_query(SPARQL_AUFSICHTSRAETE)
+    print("Bindings (Aufsichtsräte):", len(data.get("results", {}).get("bindings", [])))
+
     rows = []
     for b in data.get("results", {}).get("bindings", []):
         company = safe_value(b, "companyLabel")
         isin = safe_value(b, "isin")
         person = safe_value(b, "personLabel")
         start = safe_value(b, "start")
-
-        # wenn Label fehlt, Zeile überspringen
-        if not company or not person:
-            continue
 
         rows.append({
             "Unternehmen": company,
@@ -102,6 +114,8 @@ def main():
     df = pd.DataFrame(rows)
 
     dax_data = wdqs_query(SPARQL_DAX_ONLY)
+    print("Bindings (DAX):", len(dax_data.get("results", {}).get("bindings", [])))
+
     dax_all = []
     for x in dax_data.get("results", {}).get("bindings", []):
         label = safe_value(x, "companyLabel")
@@ -122,7 +136,7 @@ def main():
         df_missing.to_excel(writer, index=False, sheet_name="Fehlende Firmen")
 
     print("Excel erstellt:", filename)
-    print("Rows:", len(df))
+    print("Rows (Aufsichtsräte):", len(df))
     print("Missing companies:", len(missing))
 
 if __name__ == "__main__":
