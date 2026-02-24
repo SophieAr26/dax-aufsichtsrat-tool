@@ -77,7 +77,10 @@ def main():
     ORDER BY ?companyLabel
     """
     dax_data = wdqs_query(SPARQL_DAX_ONLY)
-    dax_all = [x["companyLabel"]["value"] for x in dax_data["results"]["bindings"]]
+    dax_all = []
+    for x in dax_data["results"]["bindings"]:
+        if "companyLabel" in x:
+            dax_all.append(x["companyLabel"]["value"])
 
     have = set(df["Unternehmen"].dropna().unique())
     missing = sorted([c for c in dax_all if c not in have])
