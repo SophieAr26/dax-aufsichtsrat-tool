@@ -19,9 +19,20 @@ def get_board_members(company, url):
         soup = BeautifulSoup(response.text, "lxml")
        
         for li in soup.find_all("li"):
-            text = li.get_text(strip=True)
-            if len(text) > 5 and len(text) < 100:
-                members.append(text)
+    text = li.get_text(strip=True)
+
+    # Menübegriffe ignorieren
+    blacklist = [
+        "Privacy", "Terms", "Information", "Digital",
+        "Cookie", "Contact", "Imprint"
+    ]
+
+    if any(word in text for word in blacklist):
+        continue
+
+    # Nur Einträge mit mindestens zwei Wörtern (Vorname Nachname)
+    if len(text.split()) >= 2 and len(text) < 80:
+        members.append(text)
                
     except Exception as e:
         print(f"Fehler bei {company}: {e}")
