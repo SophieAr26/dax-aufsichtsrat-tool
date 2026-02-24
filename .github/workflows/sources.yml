@@ -1,13 +1,1 @@
-meta:
-  user_agent: "dax-aufsichtsrat-tool/1.0"
-  request_delay_seconds: 1.0
-  min_members: 6
-  max_members: 30
 
-companies:
-  Siemens AG:
-    url: "https://www.siemens.com/de-de/company/leadership/supervisory-board/"
-    selector: "h3"
-  SAP SE:
-    url: "https://www.sap.com/investors/de/governance-and-sustainability/supervisory-board.html "
-    selector: "h3"
